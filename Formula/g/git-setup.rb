@@ -16,7 +16,7 @@ class GitSetup < Formula
   # end
 
   def install
-    system "go", "build", *std_go_args(ldflags: "-s -w")
+    system "cargo", "install", *std_cargo_args
   end
 
   test do
@@ -29,6 +29,8 @@ class GitSetup < Formula
     #
     # The installed folder is not in the path, so use the entire path to any
     # executables being tested: `system bin/"program", "do", "something"`.
-    system "false"
+    system "true"
+    # this test runs `ghloc --version` and checks that it starts with "ghloc "
+    assert_match /^git-setup /, shell_output("#{bin}/git setup --version")
   end
 end
