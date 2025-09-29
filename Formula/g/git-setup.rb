@@ -1,13 +1,13 @@
 # Documentation: https://docs.brew.sh/Formula-Cookbook
 #                https://rubydoc.brew.sh/Formula
 # PLEASE REMOVE ALL GENERATED COMMENTS BEFORE SUBMITTING YOUR PULL REQUEST!
-class AwsSso < Formula
+class GitSetup < Formula
   desc ""
   homepage ""
   license ""
-  head "git@sscm.gus.cisco.com:gtts/aws-sso.git"
+  head "git@github.com:aRustyDev/git-setup-rs.git"
 
-  depends_on "go" => :build
+  depends_on "rust" => :build
 
   # Additional dependency
   # resource "" do
