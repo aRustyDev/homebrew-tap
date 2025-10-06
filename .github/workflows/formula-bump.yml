@@ -78,16 +78,16 @@ jobs:
   #       - Use template to generate the pull request title and body
   #   - NOTE: may parallelize this step/job
   update-formulas:
-    needs: check-for-updates
     if: needs.check-for-updates.outputs.has_updates == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
       issues: write
+    needs: check-for-updates
     strategy:
       matrix:
-        formula: ${{ jobs.check-for-updates.outputs.formulas }}
+        formula: ${{ needs.check-for-updates.outputs.formulas }}
     steps:
       - name: Checkout tap repository
         uses: actions/checkout@v4
