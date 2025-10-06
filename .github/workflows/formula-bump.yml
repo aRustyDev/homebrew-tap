@@ -48,19 +48,20 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+    needs: load-existing-formulas
     outputs:
-      has_updates: ${{ steps.check_updates.outputs.has_updates }}
-      formulas: ${{ steps.check_updates.outputs.updates }}
+      has_updates: ${{ steps.check_releases.outputs.has_updates }}
+      formulas: ${{ steps.check_releases.outputs.updates }}
     strategy:
       matrix:
-        formula: ${{ jobs.load-existing-formulas.outputs.existing }}
+        formula: ${{ needs.load-existing-formulas.outputs.existing }}
     steps:
       # Check each formula for updates
       - name: Check formula updates
         id: check_releases
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        uses: ./.github/actions/check-formula
+        uses: ./.github/actions/check-formula@main
         with:
           formulas: ${{ matrix.formula.name }}
 
