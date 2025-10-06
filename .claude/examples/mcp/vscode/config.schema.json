@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Generated schema for Root",
+  "type": "object",
+  "properties": {
+    "mcp": {
+      "type": "object",
+      "properties": {
+        "servers": {
+          "type": "object",
+          "properties": {
+            "FooServer": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "command": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": ["type", "command", "args"]
+            }
+          },
+          "required": ["FooServer"]
+        }
+      },
+      "required": ["servers"]
+    }
+  },
+  "required": ["mcp"]
+}
