@@ -1,0 +1,19 @@
+{
+  "$id": "https://github.com/aRustyDev/homebrew-tap/formulas",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "name": "formulas.json",
+  "title": "Schema for homebrew formula items",
+  "url": "https://raw.githubusercontent.com/aRustyDev/homebrew-tap/main/.data/formulas.json",
+  "fileMatch": ["formulas.json"],
+  "type": "object",
+  "properties": {
+    "formulas": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": ["formulas"]
+}
