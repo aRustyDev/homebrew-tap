@@ -58,12 +58,13 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+    needs: load-existing-formulas
     outputs:
       has_updates: ${{ steps.check_updates.outputs.has_updates }}
       formulas: ${{ steps.check_updates.outputs.updates }}
     strategy:
       matrix:
-        repos: ${{ jobs.load-existing-formulas.outputs.repos }}
+        repos: ${{ needs.load-existing-formulas.outputs.repos }}
     steps:
       - name: Checkout tap repository
         uses: actions/checkout@v4
@@ -88,13 +89,14 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+    needs: identify-gaps
     outputs:
       has_updates: ${{ steps.check_updates.outputs.has_updates }}
       formulas: ${{ steps.check_updates.outputs.updates }}
     strategy:
       matrix:
-        repos: ${{ jobs.identify-gaps.outputs.missing }}
-        versions: ${{ jobs.identify-gaps.outputs.versions }}
+        repos: ${{ needs.identify-gaps.outputs.missing }}
+        versions: ${{ needs.identify-gaps.outputs.versions }}
     steps:
       # Check each formula for updates
       - name: Update formula
