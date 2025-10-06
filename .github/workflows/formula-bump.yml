@@ -103,11 +103,13 @@ jobs:
           node-version: ${{ inputs.node-version }}
 
       - name: Create new branch
+        id: branch
         run: |
           TODO@CLAUDE: Task 002
           git checkout -b feat/auto/update/${{ matrix.formula.name }}-${{ github.event.number }}
 
       - name: Update formula.json
+        id: formula-json
         run: |
           TODO@CLAUDE: Task 003
           #  - Use jq to update the file
@@ -115,21 +117,24 @@ jobs:
           #  - jq script file should live in .github/jq/update-formula.jq
 
       - name: Update target Formula
+        id: formula
         run: |
           TODO@CLAUDE: Task 004
 
       - name: Create Markdown Files from Mustache Templates
+        id: mustache
         run: |
           TODO@CLAUDE: Task 005
 
       - name: Commit Changes
+        id: commit
         run: |
           TODO@CLAUDE: Task 006
           #  - Only target .data/formula.json
           #  - Only target Formula/<n>/<Formula>.rb
 
       - name: Create Issue
-        id: latest_release
+        id: issue
         run: |
           TODO@CLAUDE: Task 007
           gh issue create
@@ -140,7 +145,7 @@ jobs:
             --repo user/repo
 
       - name: Create Pull Request
-        id: latest_release
+        id: pr
         run: |
           TODO@CLAUDE: Task 008
           # Needs to delete branch on acceptance
