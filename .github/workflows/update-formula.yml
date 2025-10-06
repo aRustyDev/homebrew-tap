@@ -28,7 +28,7 @@ jobs:
 
       # Setup JQ
       - name: JQ #
-        uses: aRustyDev/gha/actions/run-jq
+        uses: aRustyDev/gha/actions/run-jq@main
         with:
           jq-file: .github/jq/parse-formula.jq
           json-file: .data/formula.json
@@ -37,7 +37,7 @@ jobs:
       # Get unique formulas
       - name: Unique Formulas #
         id: formulas
-        uses: aRustyDev/gha/actions/run-jq
+        uses: aRustyDev/gha/actions/run-jq@main
         with:
           jq-file: .github/jq/parse-formula.jq
           json-file: .data/formula.json
@@ -46,7 +46,7 @@ jobs:
       # Get unique repos
       - name: Unique Repos #
         id: repos
-        uses: aRustyDev/gha/actions/run-jq
+        uses: aRustyDev/gha/actions/run-jq@main
         with:
           jq-file: .github/jq/parse-formula.jq
           json-file: .data/formula.json
@@ -79,7 +79,7 @@ jobs:
         id: check_releases
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        uses: aRustyDev/gha/actions/check-formula
+        uses: aRustyDev/gha/actions/check-formula@main
         with:
           formulas: ${{ matrix.repos }}
 
@@ -103,6 +103,6 @@ jobs:
         id: check_releases
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        uses: aRustyDev/gha/actions/update-formula
+        uses: aRustyDev/gha/actions/update-formula@main
         with:
           formulas: ${{ matrix.repos }}
