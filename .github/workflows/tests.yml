@@ -3,14 +3,14 @@ name: brew test-bot
 on:
   push:
     branches:
-      - main
+      - dontrun
   pull_request:
 
 jobs:
   test-bot:
     strategy:
       matrix:
-        os: [ ubuntu-22.04, macos-15-intel, macos-26 ]
+        os: [ubuntu-22.04, macos-15-intel, macos-26]
     runs-on: ${{ matrix.os }}
     permissions:
       actions: read
@@ -44,4 +44,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bottles_${{ matrix.os }}
-          path: '*.bottle.*'
+          path: "*.bottle.*"
