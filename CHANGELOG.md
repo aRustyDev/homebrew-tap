@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Replaced broken custom formula bump workflows with battle-tested community action
+- `just-mcp`: Updated from HEAD-only to stable v0.1.5 with livecheck block
 
 ### Removed
 - `.github/workflows/formula-bump.yml` (broken, contained TODO placeholders)
