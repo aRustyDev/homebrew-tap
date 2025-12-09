@@ -1,0 +1,190 @@
+name: Watch External Repos
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: "Specific repo to check (owner/repo format, leave empty for all)"
+        required: false
+        type: string
+      force:
+        description: "Force update even if version matches"
+        required: false
+        default: false
+        type: boolean
+
+env:
+  # Add external repos to watch here (owner/repo:formula-name)
+  WATCHED_REPOS: |
+    rubiojr/zed-prompts:zed-prompts
+
+jobs:
+  check-releases:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.check.outputs.matrix }}
+      has_updates: ${{ steps.check.outputs.has_updates }}
+    steps:
+      - name: Checkout tap repository
+        uses: actions/checkout@v4
+
+      - name: Check for new releases
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_REPO: ${{ inputs.repo }}
+          INPUT_FORCE: ${{ inputs.force }}
+        run: |
+          updates=()
+
+          # Parse watched repos
+          while IFS= read -r line; do
+            [[ -z "$line" ]] && continue
+
+            repo_part="${line%%:*}"
+            formula_name="${line##*:}"
+            owner="${repo_part%%/*}"
+            repo="${repo_part##*/}"
+
+            # Skip if specific repo requested and doesn't match
+            if [[ -n "$INPUT_REPO" && "$repo_part" != "$INPUT_REPO" ]]; then
+              continue
+            fi
+
+            echo "Checking $owner/$repo..."
+
+            # Get latest release tag
+            latest_tag=$(gh api "repos/$owner/$repo/releases/latest" --jq '.tag_name' 2>/dev/null || echo "")
+
+            # If no releases, try tags
+            if [[ -z "$latest_tag" ]]; then
+              latest_tag=$(gh api "repos/$owner/$repo/tags" --jq '.[0].name' 2>/dev/null || echo "")
+            fi
+
+            if [[ -z "$latest_tag" ]]; then
+              echo "  No releases or tags found for $owner/$repo"
+              continue
+            fi
+
+            echo "  Latest tag: $latest_tag"
+
+            # Determine formula path
+            first_letter="${formula_name:0:1}"
+            formula_path="Formula/${first_letter}/${formula_name}.rb"
+
+            # Get current version from formula if it exists
+            current_version=""
+            if [[ -f "$formula_path" ]]; then
+              current_version=$(grep -E '^\s*url\s+"' "$formula_path" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "")
+              echo "  Current version: ${current_version:-none}"
+            else
+              echo "  Formula not found at $formula_path"
+            fi
+
+            # Check if update needed
+            if [[ "$INPUT_FORCE" == "true" || "$latest_tag" != "$current_version" ]]; then
+              echo "  Update available: $current_version -> $latest_tag"
+
+              # Get tarball SHA256
+              tarball_url="https://github.com/$owner/$repo/archive/refs/tags/${latest_tag}.tar.gz"
+              sha256=$(curl -sL "$tarball_url" | shasum -a 256 | cut -d' ' -f1)
+
+              updates+=("{\"owner\":\"$owner\",\"repo\":\"$repo\",\"formula\":\"$formula_name\",\"tag\":\"$latest_tag\",\"sha256\":\"$sha256\",\"current\":\"$current_version\"}")
+            else
+              echo "  Already up to date"
+            fi
+          done <<< "$WATCHED_REPOS"
+
+          # Build matrix output
+          if [[ ${#updates[@]} -eq 0 ]]; then
+            echo "has_updates=false" >> "$GITHUB_OUTPUT"
+            echo "matrix={\"include\":[]}" >> "$GITHUB_OUTPUT"
+          else
+            matrix_json=$(printf '%s\n' "${updates[@]}" | jq -s '{include: .}' -c)
+            echo "has_updates=true" >> "$GITHUB_OUTPUT"
+            echo "matrix=$matrix_json" >> "$GITHUB_OUTPUT"
+            echo "Updates found: $matrix_json"
+          fi
+
+  update-formula:
+    needs: check-releases
+    if: needs.check-releases.outputs.has_updates == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.check-releases.outputs.matrix) }}
+    steps:
+      - name: Checkout tap repository
+        uses: actions/checkout@v4
+
+      - name: Update formula
+        env:
+          OWNER: ${{ matrix.owner }}
+          REPO: ${{ matrix.repo }}
+          FORMULA: ${{ matrix.formula }}
+          TAG: ${{ matrix.tag }}
+          SHA256: ${{ matrix.sha256 }}
+        run: |
+          first_letter="${FORMULA:0:1}"
+          formula_path="Formula/${first_letter}/${FORMULA}.rb"
+
+          if [[ ! -f "$formula_path" ]]; then
+            echo "Formula not found: $formula_path"
+            exit 1
+          fi
+
+          echo "Updating $formula_path to $TAG"
+
+          # Update URL
+          sed -i -E "s|(url\s+\")https://github.com/${OWNER}/${REPO}/archive/refs/tags/[^\"]+(\")|(1https://github.com/${OWNER}/${REPO}/archive/refs/tags/${TAG}.tar.gz\2|" "$formula_path"
+
+          # Update SHA256
+          sed -i -E "s|(sha256\s+\")[a-f0-9]{64}(\")|(1${SHA256}\2|" "$formula_path"
+
+          echo "Updated formula:"
+          grep -E '(url|sha256)' "$formula_path"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(formula): bump ${{ matrix.formula }} to ${{ matrix.tag }}"
+          title: "⬆️ Bump ${{ matrix.formula }} to ${{ matrix.tag }}"
+          body: |
+            ## Automated Formula Update
+
+            | Field | Value |
+            |-------|-------|
+            | **Formula** | `${{ matrix.formula }}` |
+            | **Repository** | [${{ matrix.owner }}/${{ matrix.repo }}](https://github.com/${{ matrix.owner }}/${{ matrix.repo }}) |
+            | **Previous** | `${{ matrix.current }}` |
+            | **New** | `${{ matrix.tag }}` |
+
+            ### Changes
+
+            - Updated `url` to point to ${{ matrix.tag }} release
+            - Updated `sha256` checksum
+
+            ### Verification
+
+            ```bash
+            brew install --build-from-source ${{ matrix.formula }}
+            brew test ${{ matrix.formula }}
+            ```
+
+            ---
+            *This PR was automatically created by the [watch-external-repos](${{ github.server_url }}/${{ github.repository }}/actions/workflows/watch-external-repos.yml) workflow.*
+          branch: "auto/bump-${{ matrix.formula }}-${{ matrix.tag }}"
+          delete-branch: true
+          labels: |
+            auto-update
+            formula
+          assignees: aRustyDev
