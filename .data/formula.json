@@ -1,0 +1,20 @@
+[
+  {
+    "owner": "rubiojr",
+    "repo": "zed-prompts",
+    "formula": "zed-prompts",
+    "description": "Import and export prompts from Zed's prompt library",
+    "latest": "v0.1.3",
+    "updated": "2025-01-01",
+    "languages": ["go"],
+    "license": "mit",
+    "versions": [
+      {
+        "type": "tag",
+        "name": "v0.1.3",
+        "updated": "2025-01-01",
+        "sha256": "df1614deeb7f63b0bbfb9c2dd7c06a526b789f0f3858eddceb3e59a15323bca5"
+      }
+    ]
+  }
+]
