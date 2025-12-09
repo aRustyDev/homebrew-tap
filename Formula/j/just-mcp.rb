@@ -1,35 +1,24 @@
-# Documentation: https://docs.brew.sh/Formula-Cookbook
-#                https://rubydoc.brew.sh/Formula
-# PLEASE REMOVE ALL GENERATED COMMENTS BEFORE SUBMITTING YOUR PULL REQUEST!
 class JustMcp < Formula
   desc "MCP server for Just"
   homepage "https://github.com/PromptExecution/just-mcp"
+  url "https://github.com/PromptExecution/just-mcp/archive/refs/tags/v0.1.5.tar.gz"
+  sha256 "047c58d0ddea28178bfb2abdf4add5e1fec3d9a69c433c1c95e70294ce719f78"
   license "MIT"
 
-  # Stable release - will be updated by GitHub workflow
-  # url "https://github.com/PromptExecution/just-mcp/archive/refs/tags/v1.0.0.tar.gz"
-  # sha256 "PLACEHOLDER_SHA256"
-
-  # Development version from main branch
   head "https://github.com/PromptExecution/just-mcp.git", branch: "main"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   depends_on "rust" => :build
-  depends_on "just" => :build
 
   def install
     system "cargo", "install", *std_cargo_args
-    # TODO: add mcp server configs
   end
 
   test do
-    # TODO: check 'just-mcp' is in PATH
-    # TODO: check 'CARGO_HOME/bin' is in PATH
-    # TODO: check 'just-mcp' is executable
     assert_match "just-mcp", shell_output("#{bin}/just-mcp --version")
   end
 end
-
-# just build    # Build the project
-# just test     # Run tests
-# just server   # Start MCP server
-# just clean    # Clean build artifacts
