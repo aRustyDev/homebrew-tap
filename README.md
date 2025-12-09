@@ -10,6 +10,25 @@
 
 `brew install <formula>`
 
+## CI/CD
+
+### Automated Formula Updates
+
+This tap uses [dawidd6/action-homebrew-bump-formula](https://github.com/dawidd6/action-homebrew-bump-formula) to automatically detect and update outdated formulas.
+
+**Schedule:** Daily at 2 AM UTC
+
+**Manual Trigger:** Go to Actions → "Bump Formulas" → "Run workflow"
+
+**Inputs:**
+- `formula`: Specific formula to check (leave empty for all)
+- `force`: Force check even if PR already exists
+
+When updates are found, the workflow automatically:
+1. Downloads the new source tarball
+2. Calculates the SHA256 hash
+3. Creates a PR with the version bump
+
 ## Documentation
 
 `brew help`, `man brew` or check [Homebrew's documentation](https://docs.brew.sh).
