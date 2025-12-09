@@ -143,11 +143,11 @@ jobs:
 
           echo "Updating $formula_path to $TAG"
 
-          # Update URL
-          sed -i -E "s|(url\s+\")https://github.com/${OWNER}/${REPO}/archive/refs/tags/[^\"]+(\")|(\1https://github.com/${OWNER}/${REPO}/archive/refs/tags/${TAG}.tar.gz\2|" "$formula_path"
+          # Update URL using perl (more portable escaping than sed)
+          perl -i -pe "s|(url\s+\")https://github.com/\Q${OWNER}\E/\Q${REPO}\E/archive/refs/tags/[^\"]+(\")|\${1}https://github.com/${OWNER}/${REPO}/archive/refs/tags/${TAG}.tar.gz\${2}|" "$formula_path"
 
           # Update SHA256
-          sed -i -E "s|(sha256\s+\")[a-f0-9]{64}(\")|(\1${SHA256}\2|" "$formula_path"
+          perl -i -pe "s|(sha256\s+\")[a-f0-9]{64}(\")|\${1}${SHA256}\${2}|" "$formula_path"
 
           echo "Updated formula:"
           grep -E '(url|sha256)' "$formula_path"
