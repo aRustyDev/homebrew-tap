@@ -85,17 +85,23 @@ end
    ```
    Fix any issues reported.
 
-3. **Test installation**:
+3. **Run CI syntax check locally** (IMPORTANT - catches issues `brew audit` misses):
+   ```bash
+   brew test-bot --only-tap-syntax
+   ```
+   This runs `brew style` (rubocop) against the entire tap - same as CI.
+
+4. **Test installation**:
    ```bash
    brew install --build-from-source arustydev/tap/<name>
    ```
 
-4. **Run formula tests**:
+5. **Run formula tests**:
    ```bash
    brew test arustydev/tap/<name>
    ```
 
-5. **Verify binary**:
+6. **Verify binary**:
    ```bash
    <name> --help
    ```
@@ -139,11 +145,26 @@ end
 - Use `on_macos do` and `on_linux do` blocks for platform-specific URLs
 - Use `Hardware::CPU.intel?` / `Hardware::CPU.arm?` for architecture detection
 
+### CI Pitfalls
+
+**IMPORTANT:** The CI runs `brew test-bot --only-tap-syntax` which uses rubocop to lint
+ALL files in the tap repository, not just `.rb` files.
+
+Common CI failures:
+- **Markdown files with Ruby code blocks** - If you create documentation or plans
+  with Ruby examples, rubocop will try to lint them
+- **Line length > 118 chars** in test blocks - Split long assertions into multiple lines
+- **Missing file permissions** - Formula files need `chmod a+r`
+
+**Protected directories:** The `.rubocop.yml` excludes `.ai/` and `.claude/` from linting.
+If you add Ruby examples elsewhere, either exclude that path or use non-Ruby code fences.
+
 ### Checklist
 
 - [ ] Formula file created at correct path
 - [ ] SHA256 calculated and verified
 - [ ] `brew audit --new` passes
+- [ ] `brew test-bot --only-tap-syntax` passes (CI check)
 - [ ] `brew install --build-from-source` succeeds
 - [ ] `brew test` passes
 - [ ] Binary executes correctly
