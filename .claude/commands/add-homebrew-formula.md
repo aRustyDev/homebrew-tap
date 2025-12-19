@@ -32,7 +32,7 @@ Follow these steps to create a complete, working Homebrew formula.
 
 2. **Use this template** (adapt based on language):
 
-```ruby
+```text
 # typed: strict
 # frozen_string_literal: true
 
@@ -40,15 +40,15 @@ class FormulaName < Formula
   desc "Short description (max ~80 chars)"
   homepage "https://github.com/owner/repo"
   url "https://github.com/owner/repo/archive/refs/tags/vX.Y.Z.tar.gz"
-  sha256 "<calculated-sha256>"
-  license "<SPDX-license-id>"
+  sha256 "CALCULATED_SHA256_HERE"
+  license "SPDX-LICENSE-ID"
   head "https://github.com/owner/repo.git", branch: "main"
 
-  depends_on "<build-tool>" => :build
+  depends_on "build-tool" => :build
 
   def install
     # For Go projects:
-    system "go", "build", *std_go_args(ldflags: "-s -w"), "./cmd/<binary>"
+    system "go", "build", *std_go_args(ldflags: "-s -w"), "./cmd/binary"
 
     # For Rust projects:
     system "cargo", "install", *std_cargo_args
@@ -59,7 +59,7 @@ class FormulaName < Formula
 
   test do
     # Include a meaningful test that verifies the binary works
-    assert_match "expected output", shell_output("#{bin}/<binary> --help")
+    assert_match "expected output", shell_output("#{bin}/binary --help")
   end
 end
 ```
@@ -147,17 +147,20 @@ end
 
 ### CI Pitfalls
 
-**IMPORTANT:** The CI runs `brew test-bot --only-tap-syntax` which uses rubocop to lint
-ALL files in the tap repository, not just `.rb` files.
+**IMPORTANT:** The CI runs `brew test-bot --only-tap-syntax` which uses `brew style` (rubocop)
+to lint ALL files in the tap repository, not just `.rb` files.
+
+**Critical:** `brew style` uses Homebrew's central rubocop config, NOT the tap's `.rubocop.yml`.
+This means exclusions in the tap's config file have NO effect on CI.
 
 Common CI failures:
-- **Markdown files with Ruby code blocks** - If you create documentation or plans
-  with Ruby examples, rubocop will try to lint them
+- **Markdown files with Ruby code blocks** - rubocop-md lints code fenced as `ruby`
+  - **Solution:** Use `text` instead of `ruby` for code fence language in docs
 - **Line length > 118 chars** in test blocks - Split long assertions into multiple lines
 - **Missing file permissions** - Formula files need `chmod a+r`
 
-**Protected directories:** The `.rubocop.yml` excludes `.ai/` and `.claude/` from linting.
-If you add Ruby examples elsewhere, either exclude that path or use non-Ruby code fences.
+**Best practice:** Never use ` ```ruby ` code fences in markdown files in this repo.
+Use ` ```text ` instead for Ruby examples.
 
 ### Checklist
 

@@ -38,32 +38,7 @@ mustache --layout wrapper.mustache data template.mustache
 
 ### 2. Formula Structure
 
-```ruby
-# typed: strict
-# frozen_string_literal: true
-
-class Mustache < Formula
-  desc "CLI for the Mustache template language"
-  homepage "https://github.com/cbroglie/mustache"
-  url "https://github.com/cbroglie/mustache/archive/refs/tags/v1.4.0.tar.gz"
-  sha256 "3330c4516ffd3797ac9744280d2b0e1619faca082832e15d08eca9234af08636"
-  license "MIT"
-  head "https://github.com/cbroglie/mustache.git", branch: "master"
-
-  depends_on "go" => :build
-
-  def install
-    system "go", "build", *std_go_args(ldflags: "-s -w"), "./cmd/mustache"
-  end
-
-  test do
-    # Test basic template rendering
-    (testpath/"template.mustache").write("Hello {{name}}!")
-    (testpath/"data.yml").write("name: World")
-    assert_equal "Hello World!", shell_output("#{bin}/mustache #{testpath}/data.yml #{testpath}/template.mustache").strip
-  end
-end
-```
+See `Formula/m/mustache.rb` for the actual implementation.
 
 ### 3. Key Formula Elements
 
@@ -110,14 +85,9 @@ brew test mustache
 mustache --help
 ```
 
-### 7. Update formulas.json
+### 7. Livecheck
 
-Add "mustache" to `.data/formulas.json`:
-```json
-{
-  "formulas": ["mustache", "zed-prompts"]
-}
-```
+No manual registry needed - `brew livecheck` automatically detects new versions from the formula's URL pattern.
 
 ## Checklist
 
@@ -126,7 +96,7 @@ Add "mustache" to `.data/formulas.json`:
 - [ ] Run `brew audit --new --formula` to validate
 - [ ] Test installation with `brew install --build-from-source`
 - [ ] Run `brew test mustache` to verify
-- [ ] Update `.data/formulas.json`
+- [ ] Verify `brew livecheck` works
 - [ ] Commit changes to feature branch
 - [ ] Create PR to main branch
 
