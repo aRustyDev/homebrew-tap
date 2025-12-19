@@ -13,6 +13,9 @@ AllCops:
     - Homebrew/vendor/**/*
     - Taps/*/*/vendor/**/*
     - "**/vendor/**/*"
+    # Exclude markdown files with Ruby code examples
+    - ".ai/**/*"
+    - ".claude/**/*"
   SuggestExtensions:
     rubocop-minitest: false
 Layout/ArgumentAlignment:
