@@ -54,3 +54,5 @@ jobs:
           livecheck: true
           force: ${{ inputs.force || false }}
           no_fork: true
+          user-name: "x-repo-auth[bot]"
+          user-email: "2608951+x-repo-auth[bot]@users.noreply.github.com"
