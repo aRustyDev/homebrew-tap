@@ -25,11 +25,8 @@ permissions:
   contents: read
 
 jobs:
-  generate-token:
-    name: Generate App Token
+  bump-formulas:
     runs-on: ubuntu-latest
-    outputs:
-      token: ${{ steps.app-token.outputs.token }}
     steps:
       - name: Load secrets from 1Password
         id: op-secrets
@@ -48,14 +45,10 @@ jobs:
           app-id: ${{ steps.op-secrets.outputs.X_REPO_AUTH_APP_ID }}
           private-key: ${{ steps.op-secrets.outputs.X_REPO_AUTH_PRIVATE_KEY }}
 
-  bump-formulas:
-    needs: [generate-token]
-    runs-on: ubuntu-latest
-    steps:
       - name: Bump Homebrew formulas
         uses: dawidd6/action-homebrew-bump-formula@v7
         with:
-          token: ${{ needs.generate-token.outputs.token }}
+          token: ${{ steps.app-token.outputs.token }}
           tap: aRustyDev/tap
           formula: ${{ inputs.formula }}
           livecheck: true
