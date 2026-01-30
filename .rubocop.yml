@@ -16,6 +16,8 @@ AllCops:
     # Exclude markdown files with Ruby code examples
     - ".ai/**/*"
     - ".claude/**/*"
+    - "Taps/*/*/.ai/**/*"
+    - "Taps/*/*/.claude/**/*"
   SuggestExtensions:
     rubocop-minitest: false
 Layout/ArgumentAlignment:
