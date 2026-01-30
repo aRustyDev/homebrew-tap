@@ -140,7 +140,7 @@ Which is your intent?
 
 Store the clarified purpose for use in later phases:
 
-```
+```text
 SKILL_PURPOSE="Developing custom GitHub Actions (JS/TS, Docker, Composite)"
 SKILL_NOT_ABOUT="Writing workflow YAML files, managing Actions settings"
 ```
