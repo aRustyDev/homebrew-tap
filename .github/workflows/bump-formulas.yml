@@ -1,0 +1,45 @@
+# id:D4E5F6A7-B8C9-0123-DEF0-456789012345
+name: Bump Formulas
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      formula:
+        description: "Specific formula to check (leave empty for all)"
+        required: false
+        type: string
+      force:
+        description: "Force check even if PR already exists"
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: bump-formulas
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  bump-formulas:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Load secrets from 1Password
+        uses: 1password/load-secrets-action@v3
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SVC_ACCT_TOKEN }}
+          HOMEBREW_PAT: op://gh-homebrew-tap/gh-homebrew-tap/token
+
+      - name: Bump Homebrew formulas
+        uses: dawidd6/action-homebrew-bump-formula@v7
+        with:
+          token: ${{ env.HOMEBREW_PAT }}
+          tap: aRustyDev/tap
+          formula: ${{ inputs.formula }}
+          livecheck: true
+          force: ${{ inputs.force || false }}
+          no_fork: true

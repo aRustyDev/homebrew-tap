@@ -1,0 +1,7 @@
+node_modules
+.DS_Store
+*.zwc
+.zsh_history
+.zcompdump
+.claude-flow/
+.swarm/
