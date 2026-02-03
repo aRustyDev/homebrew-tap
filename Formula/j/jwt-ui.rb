@@ -22,6 +22,6 @@ class JwtUi < Formula
   end
 
   test do
-    assert_match "jwt-ui", shell_output("#{bin}/jui --help")
+    assert_match "jwt-ui", shell_output("#{bin}/jwtui --help")
   end
 end
