@@ -17,7 +17,7 @@ class Euporie < Formula
 
   def install
     venv = virtualenv_create(libexec, "python3.14")
-    venv.pip_install buildpath
+    venv.pip_install "euporie==#{version}"
     bin.install_symlink Dir[libexec/"bin/euporie"]
   end
 
