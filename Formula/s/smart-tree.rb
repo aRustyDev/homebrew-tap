@@ -1,8 +1,12 @@
 class SmartTree < Formula
   desc "Context-aware directory visualization tool with TUI and MCP integration"
   homepage "https://github.com/8b-is/smart-tree"
-  version "6.5.2"
   license "MIT"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   on_macos do
     on_arm do
@@ -24,11 +28,6 @@ class SmartTree < Formula
       url "https://github.com/8b-is/smart-tree/releases/download/v6.5.2/st-v6.5.2-x86_64-unknown-linux-gnu.tar.gz"
       sha256 "36a95110b67961d1cea62dfcce09fdef1075ed0a5dd612076b74d011f0478105"
     end
-  end
-
-  livecheck do
-    url :stable
-    strategy :github_latest
   end
 
   def install
