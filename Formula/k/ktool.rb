@@ -19,7 +19,7 @@ class Ktool < Formula
     venv = virtualenv_create(libexec, "python3.14")
     # ktool uses pkg_resources which requires setuptools
     venv.pip_install "setuptools"
-    venv.pip_install buildpath
+    venv.pip_install "k2l==#{version}"
     bin.install_symlink Dir[libexec/"bin/ktool"]
   end
 
