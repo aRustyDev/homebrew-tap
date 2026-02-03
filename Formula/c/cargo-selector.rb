@@ -22,6 +22,6 @@ class CargoSelector < Formula
   end
 
   test do
-    assert_match "cargo-selector", shell_output("#{bin}/cargo-selector --help")
+    assert_match "cargo selector", shell_output("#{bin}/cargo-selector --help")
   end
 end
