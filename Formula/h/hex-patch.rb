@@ -11,6 +11,7 @@ class HexPatch < Formula
     strategy :github_latest
   end
 
+  depends_on "cmake" => :build
   depends_on "rust" => :build
 
   on_linux do
