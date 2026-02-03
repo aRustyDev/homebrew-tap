@@ -16,8 +16,8 @@ class Exosphere < Formula
   depends_on "python@3.14"
 
   def install
-    virtualenv_create(libexec, "python3.14")
-    system libexec/"bin/pip", "install", "-v", "--ignore-installed", buildpath
+    venv = virtualenv_create(libexec, "python3.14")
+    venv.pip_install buildpath
     bin.install_symlink Dir[libexec/"bin/exosphere"]
   end
 
