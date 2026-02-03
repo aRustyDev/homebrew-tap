@@ -7,10 +7,55 @@ on:
   pull_request:
 
 jobs:
-  test-bot:
+  detect-linux-support:
+    runs-on: ubuntu-latest
+    outputs:
+      needs_linux: ${{ steps.check.outputs.needs_linux }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check if changed formulas support Linux
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Get changed formula files from PR
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "needs_linux=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          CHANGED=$(gh pr view ${{ github.event.pull_request.number }} --json files -q '.files[].path' | grep '^Formula/.*\.rb$' || true)
+
+          # If no formulas changed, skip Linux tests
+          if [ -z "$CHANGED" ]; then
+            echo "No formula files changed, skipping Linux tests"
+            echo "needs_linux=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Check if any formula supports Linux (doesn't have depends_on :macos)
+          NEEDS_LINUX=false
+          for f in $CHANGED; do
+            if [ -f "$f" ] && ! grep -q 'depends_on :macos' "$f"; then
+              echo "Formula $f supports Linux"
+              NEEDS_LINUX=true
+              break
+            fi
+          done
+
+          if [ "$NEEDS_LINUX" = "false" ]; then
+            echo "All changed formulas are macOS-only, skipping Linux tests"
+          fi
+
+          echo "needs_linux=$NEEDS_LINUX" >> $GITHUB_OUTPUT
+
+  test-bot-macos:
+    needs: detect-linux-support
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-15-intel, macos-26]
+        os: [macos-15-intel, macos-26]
     runs-on: ${{ matrix.os }}
     permissions:
       actions: read
@@ -44,4 +89,42 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: bottles_${{ matrix.os }}
+          path: "*.bottle.*"
+
+  test-bot-linux:
+    needs: detect-linux-support
+    if: needs.detect-linux-support.outputs.needs_linux == 'true'
+    runs-on: ubuntu-22.04
+    permissions:
+      actions: read
+      checks: read
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cache Homebrew Bundler RubyGems
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.set-up-homebrew.outputs.gems-path }}
+          key: ubuntu-22.04-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
+          restore-keys: ubuntu-22.04-rubygems-
+
+      - run: brew test-bot --only-cleanup-before
+
+      - run: brew test-bot --only-setup
+
+      - run: brew test-bot --only-tap-syntax
+      - run: brew test-bot --only-formulae
+        if: github.event_name == 'pull_request'
+
+      - name: Upload bottles as artifact
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v6
+        with:
+          name: bottles_ubuntu-22.04
           path: "*.bottle.*"
