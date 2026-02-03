@@ -15,6 +15,8 @@ class YoutubeTui < Formula
 
   on_linux do
     depends_on "openssl@3"
+    depends_on "pkgconf" => :build
+    depends_on "zlib"
   end
 
   def install
