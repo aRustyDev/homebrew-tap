@@ -16,10 +16,10 @@ class Ktool < Formula
   depends_on "python@3.14"
 
   def install
-    virtualenv_create(libexec, "python3.14")
+    venv = virtualenv_create(libexec, "python3.14")
     # ktool uses pkg_resources which requires setuptools
-    system libexec/"bin/pip", "install", "-v", "setuptools"
-    system libexec/"bin/pip", "install", "-v", "--ignore-installed", buildpath
+    venv.pip_install "setuptools"
+    venv.pip_install buildpath
     bin.install_symlink Dir[libexec/"bin/ktool"]
   end
 
