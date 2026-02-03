@@ -17,7 +17,8 @@ class Exosphere < Formula
 
   def install
     venv = virtualenv_create(libexec, "python3.14")
-    venv.pip_install "exosphere==#{version}"
+    # Use pip module directly to ensure dependencies are installed
+    system venv.root/"bin/python", "-m", "pip", "install", "exosphere==#{version}"
     bin.install_symlink Dir[libexec/"bin/exosphere"]
   end
 
