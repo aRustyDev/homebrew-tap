@@ -15,10 +15,12 @@ class Exosphere < Formula
 
   depends_on "python@3.14"
 
+  uses_from_macos "zlib"
+
   def install
     venv = virtualenv_create(libexec, "python3.14")
-    # Use pip module directly to ensure dependencies are installed
-    system venv.root/"bin/python", "-m", "pip", "install", "exosphere==#{version}"
+    # Install from source (not on PyPI) with dependencies
+    system venv.root/"bin/python", "-m", "pip", "install", buildpath
     bin.install_symlink Dir[libexec/"bin/exosphere"]
   end
 
