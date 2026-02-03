@@ -7,15 +7,16 @@ on:
   pull_request:
 
 jobs:
-  detect-linux-support:
+  detect-formula-type:
     runs-on: ubuntu-latest
     outputs:
       needs_linux: ${{ steps.check.outputs.needs_linux }}
+      has_head_only: ${{ steps.check.outputs.has_head_only }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check if changed formulas support Linux
+      - name: Check formula types
         id: check
         env:
           GH_TOKEN: ${{ github.token }}
@@ -23,36 +24,50 @@ jobs:
           # Get changed formula files from PR
           if [ "${{ github.event_name }}" != "pull_request" ]; then
             echo "needs_linux=false" >> "$GITHUB_OUTPUT"
+            echo "has_head_only=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           CHANGED=$(gh pr view "${{ github.event.pull_request.number }}" --json files -q '.files[].path' | grep '^Formula/.*\.rb$' || true)
 
-          # If no formulas changed, skip Linux tests
+          # If no formulas changed, skip tests
           if [ -z "$CHANGED" ]; then
-            echo "No formula files changed, skipping Linux tests"
+            echo "No formula files changed"
             echo "needs_linux=false" >> "$GITHUB_OUTPUT"
+            echo "has_head_only=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          # Check if any formula supports Linux (doesn't have depends_on :macos)
+          # Check formula properties
           NEEDS_LINUX=false
+          HAS_HEAD_ONLY=false
           for f in $CHANGED; do
-            if [ -f "$f" ] && ! grep -q 'depends_on :macos' "$f"; then
-              echo "Formula $f supports Linux"
-              NEEDS_LINUX=true
-              break
+            if [ -f "$f" ]; then
+              # Check if formula supports Linux (doesn't have depends_on :macos)
+              if ! grep -q 'depends_on :macos' "$f"; then
+                echo "Formula $f supports Linux"
+                NEEDS_LINUX=true
+              fi
+              # Check if formula is HEAD-only (has 'head' but no 'url' outside head block)
+              if grep -q '^\s*head\s' "$f" && ! grep -q '^\s*url\s' "$f"; then
+                echo "Formula $f is HEAD-only"
+                HAS_HEAD_ONLY=true
+              fi
             fi
           done
 
           if [ "$NEEDS_LINUX" = "false" ]; then
             echo "All changed formulas are macOS-only, skipping Linux tests"
           fi
+          if [ "$HAS_HEAD_ONLY" = "true" ]; then
+            echo "PR contains HEAD-only formulas, skipping bottle builds"
+          fi
 
           echo "needs_linux=$NEEDS_LINUX" >> "$GITHUB_OUTPUT"
+          echo "has_head_only=$HAS_HEAD_ONLY" >> "$GITHUB_OUTPUT"
 
   test-bot-macos:
-    needs: detect-linux-support
+    needs: detect-formula-type
     strategy:
       matrix:
         os: [macos-15-intel, macos-26]
@@ -81,19 +96,21 @@ jobs:
       - run: brew test-bot --only-setup
 
       - run: brew test-bot --only-tap-syntax
-      - run: brew test-bot --only-formulae
-        if: github.event_name == 'pull_request'
+
+      - name: Build and test formulae
+        if: github.event_name == 'pull_request' && needs.detect-formula-type.outputs.has_head_only != 'true'
+        run: brew test-bot --only-formulae
 
       - name: Upload bottles as artifact
-        if: always() && github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request' && needs.detect-formula-type.outputs.has_head_only != 'true'
         uses: actions/upload-artifact@v6
         with:
           name: bottles_${{ matrix.os }}
           path: "*.bottle.*"
 
   test-bot-linux:
-    needs: detect-linux-support
-    if: needs.detect-linux-support.outputs.needs_linux == 'true'
+    needs: detect-formula-type
+    if: needs.detect-formula-type.outputs.needs_linux == 'true'
     runs-on: ubuntu-22.04
     permissions:
       actions: read
@@ -119,11 +136,13 @@ jobs:
       - run: brew test-bot --only-setup
 
       - run: brew test-bot --only-tap-syntax
-      - run: brew test-bot --only-formulae
-        if: github.event_name == 'pull_request'
+
+      - name: Build and test formulae
+        if: github.event_name == 'pull_request' && needs.detect-formula-type.outputs.has_head_only != 'true'
+        run: brew test-bot --only-formulae
 
       - name: Upload bottles as artifact
-        if: always() && github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request' && needs.detect-formula-type.outputs.has_head_only != 'true'
         uses: actions/upload-artifact@v6
         with:
           name: bottles_ubuntu-22.04
