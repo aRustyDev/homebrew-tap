@@ -20,6 +20,6 @@ class TddGuardGo < Formula
   end
 
   test do
-    assert_match "tdd-guard-go", shell_output("#{bin}/tdd-guard-go --help")
+    assert_match "tdd-guard-go", shell_output("#{bin}/tdd-guard-go --help 2>&1")
   end
 end
