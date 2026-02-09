@@ -14,7 +14,7 @@ jobs:
       has_head_only: ${{ steps.check.outputs.has_head_only }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Check formula types
         id: check
